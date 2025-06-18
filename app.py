@@ -1,10 +1,10 @@
-from flask import Flask,render_template,request,redirect,url_for
+from flask import Flask,render_template,request,redirect,url_for,session
 from flask_sqlalchemy import SQLAlchemy
 
 app=Flask(__name__,template_folder='templates',static_folder='static',static_url_path='/')
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
-app.config['SECRETKEY'] = 'secret_key'
+app.config['SECRET_KEY'] = '123'
 
 db = SQLAlchemy(app)
 
@@ -16,6 +16,7 @@ class Customer(db.Model):
     email = db.Column(db.String , nullable = False)
     password = db.Column(db.String , nullable = False)
     History = db.Column(db.String , nullable = True)
+    # cart=db.relationship('Cart',backref='customer',uselist=False)
 
 class Merchant(db.Model):
     id = db.Column(db.Integer , primary_key=True)
@@ -32,7 +33,19 @@ class Product(db.Model):
     price = db.Column(db.Float ,nullable = False)
     image_url = db.Column(db.String , nullable = False)
 
+class Cart(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'))
+    customer = db.relationship('Customer', backref='cart')
+    items = db.relationship('CartItem', backref='cart', lazy=True)
 
+class CartItem(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    cart_id = db.Column(db.Integer, db.ForeignKey('cart.id'))
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id'))
+    quantity = db.Column(db.Integer, default=1)
+    product = db.relationship('Product')
+    
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -44,6 +57,7 @@ def custlogin():
         password = request.form['password']
         customer = Customer.query.filter_by(email=email).first()
         if customer and customer.password == password:
+            session['customer_id']=customer.id
             return redirect(url_for('main'))
     return render_template('custlogin.html')
 
@@ -90,6 +104,51 @@ def main():
     products = products_query.all()
     return render_template('main.html', products=products, search_query=search_query, sort_option=sort_option)
 
+def get_current_customer():
+    if 'customer_id' in session:
+        return Customer.query.get(session['customer_id'])
+    return None
+
+
+@app.route('/add_to_cart/<int:product_id>')
+def add_to_cart(product_id):
+    customer = get_current_customer()
+    if not customer:
+        return redirect(url_for('custlogin'))
+
+    # Create cart if not exists
+    if not customer.cart:
+        cart = Cart(customer=customer)
+        db.session.add(cart)
+        db.session.commit()
+
+    cart=customer.cart
+    cart_item = CartItem.query.filter_by(cart=cart, product_id=product_id).first()
+    
+    if cart_item:
+        cart_item.quantity += 1
+    else:
+        cart_item = CartItem(cart=cart, product_id=product_id, quantity=1)
+        db.session.add(cart_item)
+
+    db.session.commit()
+    return redirect(url_for('product_page'))
+
+@app.route('/cart')
+def view_cart():
+    customer = get_current_customer()
+    if not customer:
+        return redirect(url_for('custlogin'))
+
+    cart = customer.cart
+    total = sum(item.product.price * item.quantity for item in cart.items) if cart else 0
+    return render_template('cart.html', cart=cart, total=total)
+
+
+@app.route('/logout')
+def logout():
+    session.pop('customer_id', None)
+    return redirect(url_for('custlogin'))
 
 if __name__=='__main__':
     with app.app_context():

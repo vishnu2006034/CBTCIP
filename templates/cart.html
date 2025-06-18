@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Shopping Cart</title>
+    <style>
+        table {
+            width: 80%;
+            margin: 20px auto;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        .total-row td {
+            font-weight: bold;
+        }
+        .empty-cart {
+            text-align: center;
+            margin: 40px;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align:center;">Your Shopping Cart</h1>
+    {% if cart and cart.items %}
+    <table>
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Price (each)</th>
+                <th>Subtotal</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in cart.items %}
+            <tr>
+                <td>{{ item.product.name }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>${{ "%.2f"|format(item.product.price) }}</td>
+                <td>${{ "%.2f"|format(item.product.price * item.quantity) }}</td>
+            </tr>
+            {% endfor %}
+            <tr class="total-row">
+                <td colspan="3">Total</td>
+                <td>${{ "%.2f"|format(total) }}</td>
+            </tr>
+        </tbody>
+    </table>
+    {% else %}
+    <p class="empty-cart">Your cart is empty.</p>
+    {% endif %}
+</body>
+</html>
