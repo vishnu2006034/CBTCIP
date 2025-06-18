@@ -52,6 +52,9 @@
                 <td colspan="3">Total</td>
                 <td>${{ "%.2f"|format(total) }}</td>
             </tr>
+            <tr class="total-row" ,align="right">
+                <td><a href="{{url_for('checkout')}}"><button>Buy</button></a></td>
+            </tr>
         </tbody>
     </table>
     {% else %}

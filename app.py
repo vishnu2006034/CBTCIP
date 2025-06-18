@@ -1,6 +1,6 @@
 from flask import Flask,render_template,request,redirect,url_for,session
 from flask_sqlalchemy import SQLAlchemy
-
+from datetime import datetime
 app=Flask(__name__,template_folder='templates',static_folder='static',static_url_path='/')
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
@@ -33,10 +33,12 @@ class Product(db.Model):
     price = db.Column(db.Float ,nullable = False)
     image_url = db.Column(db.String , nullable = False)
 
+from sqlalchemy.orm import backref
+
 class Cart(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'))
-    customer = db.relationship('Customer', backref='cart')
+    customer = db.relationship('Customer', backref=backref('cart', uselist=False))
     items = db.relationship('CartItem', backref='cart', lazy=True)
 
 class CartItem(db.Model):
@@ -45,7 +47,15 @@ class CartItem(db.Model):
     product_id = db.Column(db.Integer, db.ForeignKey('product.id'))
     quantity = db.Column(db.Integer, default=1)
     product = db.relationship('Product')
-    
+
+class Order(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'))
+    total_amount = db.Column(db.Float)
+    status = db.Column(db.String(50), default='Pending')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    customer = db.relationship('Customer', backref='orders')
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -122,17 +132,17 @@ def add_to_cart(product_id):
         db.session.add(cart)
         db.session.commit()
 
-    cart=customer.cart
-    cart_item = CartItem.query.filter_by(cart=cart, product_id=product_id).first()
+    cart1=customer.cart
+    cart_item = CartItem.query.filter_by(cart_id=cart1.id, product_id=product_id).first()
     
     if cart_item:
         cart_item.quantity += 1
     else:
-        cart_item = CartItem(cart=cart, product_id=product_id, quantity=1)
+        cart_item = CartItem(cart=cart1, product_id=product_id, quantity=1)
         db.session.add(cart_item)
 
     db.session.commit()
-    return redirect(url_for('product_page'))
+    return redirect(url_for('main'))
 
 @app.route('/cart')
 def view_cart():
@@ -143,6 +153,30 @@ def view_cart():
     cart = customer.cart
     total = sum(item.product.price * item.quantity for item in cart.items) if cart else 0
     return render_template('cart.html', cart=cart, total=total)
+
+
+@app.route('/checkout', methods=['GET', 'POST'])
+def checkout():
+    customer = get_current_customer()
+    if not customer or not customer.cart or not customer.cart.items:
+        return redirect(url_for('main'))
+
+    if request.method == 'POST':
+        total_amount = sum(item.product.price * item.quantity for item in customer.cart.items)
+
+        # Create order
+        new_order = Order(customer=customer, total_amount=total_amount)
+        db.session.add(new_order)
+
+        # Empty the cart
+        for item in customer.cart.items:
+            db.session.delete(item)
+        db.session.commit()
+
+        return render_template('payment_success.html', order=new_order)
+
+    total = sum(item.product.price * item.quantity for item in customer.cart.items)
+    return render_template('payment.html', total=total)
 
 
 @app.route('/logout')
