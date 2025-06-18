@@ -24,6 +24,15 @@ class Merchant(db.Model):
     password = db.Column(db.String , nullable = False)
     products = db.Column(db.String , nullable = True)
 
+class Product(db.Model):
+    id = db.Column(db.Integer , primary_key=True)
+    name = db.Column(db.String , nullable = False)
+    description = db.Column(db.String , nullable = False)
+    quantity = db.Column(db.String , nullable = False)
+    price = db.Column(db.Float ,nullable = False)
+    image_url = db.Column(db.String , nullable = False)
+
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -56,7 +65,30 @@ def custreg():
         # flash("check for the account already exists")
     return render_template("custreg.html")  # it is the registration html
     
+@app.route('/main', methods=['GET', 'POST'])
+def main():
+    search_query = request.args.get('search', '')
+    sort_option = request.args.get('sort', '')
 
+    products_query = Product.query
+
+    if search_query:
+        search_pattern = f"%{search_query}%"
+        products_query = products_query.filter(
+            (Product.name.ilike(search_pattern)) | (Product.description.ilike(search_pattern))
+        )
+
+    if sort_option == 'price_asc':
+        products_query = products_query.order_by(Product.price.asc())
+    elif sort_option == 'price_desc':
+        products_query = products_query.order_by(Product.price.desc())
+    elif sort_option == 'name_asc':
+        products_query = products_query.order_by(Product.name.asc())
+    elif sort_option == 'name_desc':
+        products_query = products_query.order_by(Product.name.desc())
+
+    products = products_query.all()
+    return render_template('main.html', products=products, search_query=search_query, sort_option=sort_option)
 
 
 if __name__=='__main__':

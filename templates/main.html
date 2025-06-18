@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ecommerce Main Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        header {
+            margin-bottom: 20px;
+        }
+        .search-sort {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .search-sort form {
+            display: flex;
+            gap: 10px;
+        }
+        input[type="text"] {
+            padding: 8px;
+            font-size: 16px;
+            width: 250px;
+        }
+        select {
+            padding: 8px;
+            font-size: 16px;
+        }
+        .product-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill,minmax(250px,1fr));
+            gap: 20px;
+        }
+        .product-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .product-card img {
+            max-width: 100%;
+            height: 180px;
+            object-fit: contain;
+            margin-bottom: 10px;
+        }
+        .product-info {
+            flex-grow: 1;
+        }
+        .product-name {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+        .product-description {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 10px;
+        }
+        .product-quantity {
+            font-size: 14px;
+            color: #777;
+            margin-bottom: 10px;
+        }
+        .product-price {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .add-to-cart-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        .add-to-cart-btn:hover {
+            background-color: #0056b3;
+        }
+        .no-products {
+            font-size: 18px;
+            color: #333;
+            text-align: center;
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>All Products</h1>
+    </header>
+    <section class="search-sort">
+        <form method="get" action="{{ url_for('main') }}">
+            <input type="text" name="search" placeholder="Search products..." value="{{ search_query }}">
+            <select name="sort">
+                <option value="" {% if not sort_option %}selected{% endif %}>Sort By</option>
+                <option value="price_asc" {% if sort_option == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
+                <option value="price_desc" {% if sort_option == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+                <option value="name_asc" {% if sort_option == 'name_asc' %}selected{% endif %}>Name: A to Z</option>
+                <option value="name_desc" {% if sort_option == 'name_desc' %}selected{% endif %}>Name: Z to A</option>
+            </select>
+            <button type="submit">Apply</button>
+        </form>
+    </section>
+    <section class="product-list">
+        {% if products %}
+            {% for product in products %}
+            <div class="product-card">
+                <img src="{{ product.image_url }}" alt="{{ product.name }}">
+                <div class="product-info">
+                    <div class="product-name">{{ product.name }}</div>
+                    <div class="product-description">{{ product.description }}</div>
+                    <div class="product-quantity">Quantity: {{ product.quantity }}</div>
+                    <div class="product-price">${{ "%.2f"|format(product.price) }}</div>
+                </div>
+                <button class="add-to-cart-btn" onclick="alert('Added {{ product.name }} to cart!')">Add to Cart</button>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="no-products">No products found.</div>
+        {% endif %}
+    </section>
+</body>
+</html>
