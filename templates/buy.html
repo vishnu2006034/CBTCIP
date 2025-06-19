@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head><title>Buy Now - {{ product.name }}</title></head>
+<body>
+    <h1>Buy Now: {{ product.name }}</h1>
+    <p>Price: ₹{{ product.price }}</p>
+    <p>Stock Available: {{ product.stock }}</p>
+
+    <form method="post">
+        <label>Enter Quantity:</label>
+        <input type="number" name="quantity" min="1" max="{{ product.stock }}" required>
+        <button type="submit">Confirm Purchase</button>
+    </form>
+</body>
+</html>

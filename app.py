@@ -170,6 +170,12 @@ def checkout():
 
         # Empty the cart
         for item in customer.cart.items:
+            product=item.product
+            if int(product.quantity)>=item.quantity:
+                product.quantity =int(product.quantity)-item.quantity
+            else:
+                return f"not enough quantity for{product.name}"
+        for item in customer.cart.items:
             db.session.delete(item)
         db.session.commit()
 
@@ -178,6 +184,27 @@ def checkout():
     total = sum(item.product.price * item.quantity for item in customer.cart.items)
     return render_template('payment.html', total=total)
 
+@app.route('/product/<int:product_id>')
+def product(product_id):
+    product = Product.query.get(product_id)
+    return render_template('product.html', product=product)
+
+@app.route('/buy/<int:product_id>',methods=['GET','POST'])
+def buy(product_id):
+    customer = get_current_customer()
+    product = Product.query.get(product_id)
+    if request.method == 'POST':
+        quantity = int(request.form['quantity'])
+        if int(product.quantity) >= quantity:
+            total = quantity * product.price
+            new = Order(customer=customer,total_amount=total)
+            db.session.add(new)
+            product.quantity=int(product.quantity)-quantity
+            db.session.commit()
+            return render_template('payment_success.html',order=new)
+        else :
+            return f"Not enough quantity for {product.name}"
+    return render_template('buy.html',product=product)
 
 @app.route('/logout')
 def logout():

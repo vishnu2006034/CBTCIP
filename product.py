@@ -27,4 +27,4 @@ def import_products(csv_file):
         print("Products imported successfully.")
 
 if __name__ == '__main__':
-    import_products('apparel.csv')
+    import_products('jewelery.csv')

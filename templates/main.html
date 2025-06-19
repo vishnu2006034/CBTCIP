@@ -117,14 +117,19 @@
         {% if products %}
             {% for product in products %}
             <div class="product-card">
-                <img src="{{ product.image_url }}" alt="{{ product.name }}">
+                <a href="{{ url_for('product', product_id=product.id) }}">
+                    <img src="{{ product.image_url }}" alt="{{ product.name }}">
+                </a>
                 <div class="product-info">
-                    <div class="product-name">{{ product.name }}</div>
+                    <a href="{{ url_for('product', product_id=product.id) }}" style="text-decoration:none; color:inherit;">
+                        <div class="product-name">{{ product.name }}</div>
+                    </a>
                     <div class="product-description">{{ product.description }}</div>
                     <div class="product-quantity">Quantity: {{ product.quantity }}</div>
                     <div class="product-price">${{ "%.2f"|format(product.price) }}</div>
                 </div>
                 <a href="{{ url_for('add_to_cart', product_id=product.id) }}"><button class="add-to-cart-btn" >Add to Cart</button></a>
+                <a href="{{ url_for('buy', product_id=product.id) }}"><button class="add-to-cart-btn" >Buy Now</button></a>
             </div>
             {% endfor %}
         {% else %}
