@@ -1,107 +1,185 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{{ product.name }} - Product Details</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f5f5f5;
-        }
-        .product-detail {
-            display: flex;
-            gap: 40px;
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .product-image {
-            flex: 1;
-        }
-        .product-image img {
-            max-width: 100%;
-            height: auto;
-            object-fit: contain;
-            border-radius: 8px;
-        }
-        .product-info {
-            flex: 2;
-            display: flex;
-            flex-direction: column;
-        }
-        .product-name {
-            font-size: 28px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        .product-description {
-            font-size: 16px;
-            color: #555;
-            margin-bottom: 20px;
-        }
-        .product-price {
-            font-size: 24px;
-            font-weight: bold;
-            color: #007bff;
-            margin-bottom: 20px;
-        }
-        .product-quantity {
-            font-size: 16px;
-            color: #777;
-            margin-bottom: 20px;
-        }
-        .buttons {
-            display: flex;
-            gap: 20px;
-        }
-        .btn {
-            padding: 12px 24px;
-            font-size: 16px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            color: white;
-            transition: background-color 0.3s ease;
-            text-decoration: none;
-            text-align: center;
-            display: inline-block;
-        }
-        .btn-add-to-cart {
-            background-color: #007bff;
-        }
-        .btn-add-to-cart:hover {
-            background-color: #0056b3;
-        }
-        .btn-buy-now {
-            background-color: #28a745;
-        }
-        .btn-buy-now:hover {
-            background-color: #1e7e34;
-        }
-        a.btn {
-            color: white;
-        }
-    </style>
-</head>
-<body>
-    <a href="{{ url_for('main') }}">&larr; Back to Products</a>
-    <div class="product-detail">
-        <div class="product-image">
-            <img src="{{ product.image_url }}" alt="{{ product.name }}">
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }} - ShopMart{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('index') }}">All Products</a></li>
+            <li class="breadcrumb-item active">{{ product.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Product Image -->
+        <div class="col-md-6 mb-4">
+            {% if product.image_url %}
+                <img src="{{ product.image_url }}" class="img-fluid rounded" alt="{{ product.name }}">
+            {% else %}
+                <div class="bg-light d-flex align-items-center justify-content-center rounded" style="height: 400px;">
+                    <i class="fas fa-image fa-5x text-muted"></i>
+                </div>
+            {% endif %}
         </div>
-        <div class="product-info">
-            <div class="product-name">{{ product.name }}</div>
-            <div class="product-description">{{ product.description }}</div>
-            <div class="product-price">${{ "%.2f"|format(product.price) }}</div>
-            <div class="product-quantity">Available Quantity: {{ product.quantity }}</div>
-            <div class="buttons">
-                <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-add-to-cart">Add to Cart</a>
-                <a href="{{ url_for('buy', product_id=product.id) }}" class="btn btn-buy-now">Buy Now</a>
+
+        <!-- Product Details -->
+        <div class="col-md-6">
+            <h1 class="h2 mb-3">{{ product.name }}</h1>
+            
+            <!-- Rating -->
+            <div class="mb-3">
+                <div class="stars mb-1">
+                    {% set avg_rating = product.average_rating if product.average_rating is defined else 0 %}
+                    {% for i in range(1, 6) %}
+                        <i class="fas fa-star fs-5 {% if i <= avg_rating %}text-warning{% else %}text-muted{% endif %}"></i>
+                    {% endfor %}
+                </div>
+                <span class="text-muted">{{ product.rating_count if product.rating_count is defined else 0 }} reviews</span>
+            </div>
+
+            <!-- Price -->
+            <div class="mb-4">
+                <span class="h3 text-primary">${{ "%.2f"|format(product.price) }}</span>
+            </div>
+
+            <!-- Stock Status -->
+            <div class="mb-4">
+                {% if product.quantity|int > 0 %}
+                    <span class="badge bg-success fs-6">
+                        <i class="fas fa-check me-1"></i>{{ product.quantity }} in stock
+                    </span>
+                {% else %}
+                    <span class="badge bg-danger fs-6">
+                        <i class="fas fa-times me-1"></i>Out of stock
+                    </span>
+                {% endif %}
+            </div>
+
+            <!-- Add to Cart Form -->
+            {% if product.quantity|int > 0 %}
+                <form method="POST" action="{{ url_for('add_to_cart', product_id=product.id) }}" class="mb-4">
+                    <input type="hidden" name="product_id" value="{{ product.id }}">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-auto">
+                            <label for="quantity" class="form-label">Quantity</label>
+                            <select name="quantity" id="quantity" class="form-select" style="width: auto;">
+                                {% for i in range(1, [product.quantity|int + 1, 11]|min) %}
+                                    <option value="{{ i }}">{{ i }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-cart-plus me-2"></i>Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            {% endif %}
+
+            <!-- Product Description -->
+            <div class="mb-4">
+                <h4>Description</h4>
+                <p class="text-muted">{{ product.description }}</p>
+            </div>
+
+            <!-- Product Details -->
+            <div class="mb-4">
+                <h4>Product Details</h4>
+                <ul class="list-unstyled">
+                    <li><strong>Category:</strong> N/A</li>
+                    <li><strong>SKU:</strong> #{{ "%06d"|format(product.id) }}</li>
+                    <li><strong>Availability:</strong> 
+                        {% if product.quantity|int > 0 %}
+                            In Stock ({{ product.quantity }} available)
+                        {% else %}
+                            Out of Stock
+                        {% endif %}
+                    </li>
+                </ul>
             </div>
         </div>
     </div>
-</body>
-</html>
+
+    <!-- Reviews Section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h3>Customer Reviews</h3>
+            
+            <!-- Add Review Form -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Write a Review</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('add_rating') }}">
+                        <input type="hidden" name="product_id" value="{{ product.id }}">
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="reviewer_name" class="form-label">Your Name</label>
+                                <input type="text" class="form-control" id="reviewer_name" name="reviewer_name" 
+                                       placeholder="Enter your name">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="rating" class="form-label">Rating</label>
+                                <select class="form-select" id="rating" name="rating" required>
+                                    <option value="">Select rating</option>
+                                    <option value="5">⭐⭐⭐⭐⭐ Excellent</option>
+                                    <option value="4">⭐⭐⭐⭐ Very Good</option>
+                                    <option value="3">⭐⭐⭐ Good</option>
+                                    <option value="2">⭐⭐ Fair</option>
+                                    <option value="1">⭐ Poor</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label for="review" class="form-label">Review (Optional)</label>
+                                <textarea class="form-control" id="review" name="review" rows="3" 
+                                          placeholder="Share your thoughts about this product..."></textarea>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">Submit Review</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Existing Reviews -->
+            {% if ratings %}
+                <div class="row g-4">
+                    {% for rating in ratings %}
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <h6 class="mb-1">{{ rating.reviewer_name }}</h6>
+                                            <div class="stars">
+                                                {% for i in range(1, 6) %}
+                                                    <i class="fas fa-star {% if i <= rating.rating %}text-warning{% else %}text-muted{% endif %}"></i>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">{{ rating.created_at.strftime('%B %d, %Y') }}</small>
+                                    </div>
+                                    {% if rating.review %}
+                                        <p class="mb-0">{{ rating.review }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <p class="text-muted">No reviews yet. Be the first to review this product!</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
