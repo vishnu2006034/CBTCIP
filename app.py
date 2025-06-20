@@ -23,7 +23,7 @@ class Merchant(db.Model):
     name = db.Column(db.String , nullable = False)
     email = db.Column(db.String , nullable = False)
     password = db.Column(db.String , nullable = False)
-    products = db.Column(db.String , nullable = True)
+    products = db.Column(db.String , db.ForeignKey('product.id'))
 
 class Product(db.Model):
     id = db.Column(db.Integer , primary_key=True)
@@ -230,7 +230,8 @@ def checkout():
             db.session.delete(item)
         db.session.commit()
 
-        return render_template('payment_success.html', order=new_order)
+        # After order creation, render payment page instead of payment_success
+        return render_template('payment_success.html', order=new_order, total=total_amount)
 
     total = sum(item.product.price * item.quantity for item in customer.cart.items)
     return render_template('payment.html', total=total)
@@ -264,7 +265,6 @@ def buy(product_id):
             return f"Not enough quantity for {product.name}"
     return render_template('buy.html',product=product)
 
-<<<<<<< HEAD
 @app.route('/submit_rating', methods=['POST'])
 def submit_rating():
     data = request.get_json()
@@ -343,7 +343,6 @@ def update_cart_item_quantity():
     cart_item.quantity = quantity
     db.session.commit()
     return jsonify({'success': True, 'message': 'Quantity updated'})
-=======
 @app.route('/add_rating', methods=['POST'])
 def add_rating():
     product_id = request.form.get('product_id')
@@ -360,7 +359,6 @@ def add_rating():
     # Redirect back to the product page
     return redirect(url_for('product', product_id=product_id))
 
->>>>>>> 9f6da84c8da2e6089ee80b30c07756d652f9d79a
 @app.route('/logout')
 def logout():
     session.pop('customer_id', None)
@@ -373,6 +371,46 @@ def order_history():
         return redirect(url_for('custlogin'))
     orders = customer.orders
     return render_template('order.html', orders=orders)
+
+@app.route('/directbuy', methods=['GET', 'POST'])
+def directbuy():
+    if request.method == 'POST':
+        quantity = request.form.get('quantity', type=int)
+        product_id = request.form.get('product_id', type=int)
+        product = Product.query.get(product_id)
+        customer = get_current_customer()
+        if not product or not customer:
+            return redirect(url_for('main'))
+        if product.quantity and int(product.quantity) < quantity:
+            return f"Not enough quantity for {product.name}"
+        total_amount = product.price * quantity if quantity else 0
+        # Create order here
+        new_order = Order(customer=customer, total_amount=total_amount)
+        db.session.add(new_order)
+        product.quantity = str(int(product.quantity) - quantity)
+        db.session.commit()
+        # Pass order to payment page
+        return render_template('payment.html', quantity=quantity, total=total_amount, product=product, order=new_order)
+    # else:
+    #     # For GET request, you might want to redirect or show a page
+    #     return redirect(url_for('main'))
+
+@app.route('/payment', methods=['GET', 'POST'])
+def payment():
+    if request.method == 'POST':
+        # Here you can process payment details from form
+        # For now, just render payment_success.html with real order info if available
+        order_id = request.form.get('order_id')
+        order = None
+        if order_id:
+            order = Order.query.get(order_id)
+        if not order:
+            # fallback dummy order
+            order = {'id': '12'}
+        return render_template('payment_success.html', order=order)
+    else:
+        # For GET request, redirect to main or show payment page
+        return redirect(url_for('main'))
 
 if __name__=='__main__':
     with app.app_context():

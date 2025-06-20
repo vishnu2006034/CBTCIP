@@ -102,7 +102,8 @@
             <p>Price: ₹{{ product.price }}</p>
             <p>Stock Available: {{ product.quantity }}</p>
         </div>
-        <form method="post">
+        <form method="post" action="{{ url_for('directbuy') }}">
+            <input type="hidden" name="product_id" value="{{ product.id }}" />
             <label for="quantity">Enter Quantity:</label>
             <input type="number" id="quantity" name="quantity" min="1" max="{{ product.quantity }}" required />
             <button type="submit">Confirm Purchase</button>

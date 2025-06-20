@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -218,6 +217,7 @@
     <header>
         <h1>Ecommerce Store</h1>
         <div class="header-links">
+            <a href="{{url_for('logout')}}">Logout</a>
             <a href="{{ url_for('view_cart') }}">Cart</a>
             <a href="{{ url_for('order_history') }}">Order History</a>
         </div>
@@ -236,47 +236,33 @@
         </form>
     </section>
     <section class="product-list">
-        {% if products %}
-            {% for product in products %}
-            <div class="product-card">
-                <a href="{{ url_for('product', product_id=product.id) }}">
-                    <img src="{{ product.image_url }}" alt="{{ product.name }}">
-                </a>
-                <div class="product-info">
-                    <a href="{{ url_for('product', product_id=product.id) }}" style="text-decoration:none; color:inherit;">
-                        <div class="product-name">{{ product.name }}</div>
+            {% if products %}
+                {% for product in products %}
+                <div class="product-card">
+                    <a href="{{ url_for('product', product_id=product.id) }}">
+                        <img src="{{ product.image_url }}" alt="{{ product.name }}">
                     </a>
-                    <div class="product-description">{{ product.description }}</div>
-                    <div class="product-quantity">Quantity: {{ product.quantity }}</div>
-                    <div class="product-price">${{ "%.2f"|format(product.price) }}</div>
-                    <div class="product-rating">
-                        Rating: 
-                        {% if ratings[product.id|string] is defined %}
-                            {{ ratings[product.id|string].average }} ⭐ ({{ ratings[product.id|string].count }} ratings)
-                        {% else %}
-                            No ratings yet
-                        {% endif %}
+                    <div class="product-info">
+                        <a href="{{ url_for('product', product_id=product.id) }}" style="text-decoration:none; color:inherit;">
+                            <div class="product-name">{{ product.name }}</div>
+                        </a>
+                        <div class="product-description">{{ product.description }}</div>
+                        <div class="product-quantity">Quantity: {{ product.quantity }}</div>
+                        <div class="product-price">${{ "%.2f"|format(product.price) }}</div>
+                        <div class="product-rating">
+                            Rating: 
+                            {% if ratings[product.id|string] is defined %}
+                                {{ ratings[product.id|string].average }} ⭐ ({{ ratings[product.id|string].count }} ratings)
+                            {% else %}
+                                No ratings yet
+                            {% endif %}
+                        </div>
                     </div>
+                    <a href="{{ url_for('add_to_cart', product_id=product.id) }}"><button class="add-to-cart-btn" >Add to Cart</button></a>
+                    <a href="{{ url_for('buy', product_id=product.id) }}"><button class="buy-now-btn" >Buy Now</button></a>
                 </div>
-                <a href="{{ url_for('add_to_cart', product_id=product.id) }}"><button class="add-to-cart-btn" >Add to Cart</button></a>
-                <a href="{{ url_for('buy', product_id=product.id) }}"><button class="buy-now-btn" >Buy Now</button></a>
-=======
-{% extends "base.html" %}
-
-{% block title %}Home - ShopMart{% endblock %}
-
-{% block content %}
-<div class="container py-4">
-    <!-- Hero Section -->
-    <div class="row mb-5">
-        <div class="col-12">
-            <div class="bg-primary bg-gradient text-white p-5 rounded-3 text-center">
-                <h1 class="display-4 fw-bold mb-3">Welcome to ShopMart</h1>
-                <p class="lead">Discover amazing products at unbeatable prices</p>
->>>>>>> 9f6da84c8da2e6089ee80b30c07756d652f9d79a
-            </div>
-        </div>
-    </div>
+                {% endfor %}
+            {% endif %}
 
     <!-- Filters and Sorting -->
     <div class="row mb-4">
@@ -362,7 +348,7 @@
                             
                             <div class="mt-auto">
                                 <a href="{{ url_for('product', product_id=product.id) }}" 
-                                   class="btn btn-outline-primary w-100">
+                                class="btn btn-outline-primary w-100">
                                     View Details
                                 </a>
                             </div>
@@ -388,4 +374,4 @@
         </div>
     {% endif %}
 </div>
-{% endblock %}
+

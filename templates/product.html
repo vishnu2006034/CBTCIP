@@ -1,85 +1,114 @@
-{% extends "base.html" %}
-
-{% block title %}{{ product.name }} - ShopMart{% endblock %}
-
-{% block content %}
-<div class="container py-4">
-    <!-- Breadcrumb -->
-    <nav aria-label="breadcrumb" class="mb-4">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
-            <li class="breadcrumb-item"><a href="{{ url_for('index') }}">All Products</a></li>
-            <li class="breadcrumb-item active">{{ product.name }}</li>
-        </ol>
-    </nav>
-
-    <div class="row">
-        <!-- Product Image -->
-        <div class="col-md-6 mb-4">
-            {% if product.image_url %}
-                <img src="{{ product.image_url }}" class="img-fluid rounded" alt="{{ product.name }}">
-            {% else %}
-                <div class="bg-light d-flex align-items-center justify-content-center rounded" style="height: 400px;">
-                    <i class="fas fa-image fa-5x text-muted"></i>
-                </div>
-            {% endif %}
-        </div>
-<<<<<<< HEAD
-        <div class="product-info">
-            <div class="product-name">{{ product.name }}</div>
-            <div class="product-description">{{ product.description }}</div>
-            <div class="product-price">${{ "%.2f"|format(product.price) }}</div>
-            <div class="product-quantity">Available Quantity: {{ product.quantity }}</div>
-    <div id="averageDisplay" style="margin-bottom: 15px; font-weight: bold;">
-        {% if total is not defined or total == 0 %}
-            No ratings yet
-        {% else %}
-            Average Rating: {{ average }} ⭐ ({{ total }} ratings)
-        {% endif %}
-    </div>
-    <script>
-        async function fetchAverage() {
-            const response = await fetch(`/get_average?product_id={{ product.id }}`);
-            const data = await response.json();
-            if (data.total > 0) {
-                document.getElementById('averageDisplay').textContent =
-                    `Average Rating: ${data.average} ⭐ (${data.total} ratings)`;
-            }
-        }
-        document.getElementById('ratingForm').addEventListener('submit', async function(event) {
-            event.preventDefault(); // prevent form from reloading the page
-
-            const rating = document.querySelector('input[name="rating"]:checked')?.value;
-            if (rating) {
-                const response = await fetch('/submit_rating', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({rating: parseInt(rating), product_id: "{{ product.id }}"})
-                });
-                if (response.ok) {
-                    document.getElementById('thankYou').textContent = `Thank you for your rating!`;
-                    await fetchAverage();
-                } else {
-                    document.getElementById('thankYou').textContent = `Error submitting rating.`;
-                }
-                document.getElementById('result').textContent = `Thank you! You rated us: ${rating} star(s)`;
-            } else {
-                document.getElementById('result').textContent = `Please select a rating.`;
-            }
-        });
-
-        // Load average when page loads
-        fetchAverage();
-    </script>
-            <div class="buttons">
-                <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-add-to-cart">Add to Cart</a>
-                <a href="{{ url_for('buy', product_id=product.id) }}" class="btn btn-buy-now">Buy Now</a>
-            </div>
-        </div>
-    </div>
-    <h2>Rate Our Service</h2>
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ product.name }} - ShopMart</title>
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            background-color: white;
+            padding: 20px 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        h1, .product-name {
+            color: #333;
+        }
+        .breadcrumb {
+            padding: 10px 0;
+            list-style: none;
+            background: none;
+            display: flex;
+            gap: 5px;
+            font-size: 14px;
+        }
+        .breadcrumb-item + .breadcrumb-item::before {
+            content: ">";
+            padding: 0 5px;
+            color: #666;
+        }
+        .breadcrumb a {
+            text-decoration: none;
+            color: #007bff;
+        }
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .col-md-6 {
+            flex: 0 0 50%;
+            max-width: 50%;
+        }
+        .mb-4 {
+            margin-bottom: 1.5rem;
+        }
+        .img-fluid {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+        .bg-light {
+            background-color: #f8f9fa !important;
+        }
+        .rounded {
+            border-radius: 8px !important;
+        }
+        .product-info {
+            flex: 1;
+        }
+        .product-description {
+            margin: 10px 0;
+            color: #555;
+        }
+        .product-price {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+        .product-quantity {
+            font-size: 1rem;
+            color: #777;
+            margin-bottom: 15px;
+        }
+        .buttons a {
+            display: inline-block;
+            padding: 10px 20px;
+            margin-right: 10px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .btn-add-to-cart {
+            background-color: #007bff;
+        }
+        .btn-add-to-cart:hover {
+            background-color: #0056b3;
+        }
+        .btn-buy-now {
+            background-color: #28a745;
+        }
+        .btn-buy-now:hover {
+            background-color: #1e7e34;
+        }
+        h2 {
+            margin-top: 40px;
+            color: #333;
+        }
         .star-rating {
             direction: rtl;
             font-size: 2rem;
@@ -114,40 +143,98 @@
             margin-top: 10px;
             font-style: italic;
         }
+        @media (max-width: 600px) {
+            .row {
+                flex-direction: column;
+            }
+            .col-md-6 {
+                max-width: 100%;
+                flex: 0 0 100%;
+            }
+            .buttons a {
+                margin-bottom: 10px;
+                width: 100%;
+                text-align: center;
+            }
+        }
     </style>
+</head>
+<body>
+    <div class="container">
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}">All Products</a></li>
+                <li class="breadcrumb-item active">{{ product.name }}</li>
+            </ol>
+        </nav>
 
-    <form id="ratingForm" class="star-rating">
-        <input type="radio" id="star5" name="rating" value="5" />
-        <label for="star5" title="5 stars">&#9733;</label>
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                {% if product.image_url %}
+                    <img src="{{ product.image_url }}" alt="{{ product.name }}" class="img-fluid rounded" />
+                {% else %}
+                    <div class="bg-light d-flex align-items-center justify-content-center rounded" style="height: 400px;">
+                        <i class="fas fa-image fa-5x text-muted"></i>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="product-info">
+                <h1 class="product-name">{{ product.name }}</h1>
+                <div class="product-description">{{ product.description }}</div>
+                <div class="product-price">${{ "%.2f"|format(product.price) }}</div>
+                <div class="product-quantity">Available Quantity: {{ product.quantity }}</div>
+                <div id="averageDisplay" style="margin-bottom: 15px; font-weight: bold;">
+                    {% if total is not defined or total == 0 %}
+                        No ratings yet
+                    {% else %}
+                        Average Rating: {{ average }} ⭐ ({{ total }} ratings)
+                    {% endif %}
+                </div>
+                <div class="buttons">
+                    <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn-add-to-cart">Add to Cart</a>
+                    <a href="{{ url_for('buy', product_id=product.id) }}" class="btn-buy-now">Buy Now</a>
+                </div>
+            </div>
+        </div>
 
-        <input type="radio" id="star4" name="rating" value="4" />
-        <label for="star4" title="4 stars">&#9733;</label>
+        <h2>Rate Our Service</h2>
 
-        <input type="radio" id="star3" name="rating" value="3" />
-        <label for="star3" title="3 stars">&#9733;</label>
+        <form id="ratingForm" class="star-rating">
+            <input type="radio" id="star5" name="rating" value="5" />
+            <label for="star5" title="5 stars">&#9733;</label>
 
-        <input type="radio" id="star2" name="rating" value="2" />
-        <label for="star2" title="2 stars">&#9733;</label>
+            <input type="radio" id="star4" name="rating" value="4" />
+            <label for="star4" title="4 stars">&#9733;</label>
 
-        <input type="radio" id="star1" name="rating" value="1" />
-        <label for="star1" title="1 star">&#9733;</label>
+            <input type="radio" id="star3" name="rating" value="3" />
+            <label for="star3" title="3 stars">&#9733;</label>
 
-        <button type="submit" style="margin-left: 15px; padding: 5px 15px;">Submit</button>
-    </form>
+            <input type="radio" id="star2" name="rating" value="2" />
+            <label for="star2" title="2 stars">&#9733;</label>
 
-    <div class="result" id="result"></div>
-    <div id="averageDisplay"></div>
-    <div id="thankYou"></div>
+            <input type="radio" id="star1" name="rating" value="1" />
+            <label for="star1" title="1 star">&#9733;</label>
+
+            <button type="submit" style="margin-left: 15px; padding: 5px 15px;">Submit</button>
+        </form>
+
+        <div class="result" id="result"></div>
+        <div id="averageDisplay"></div>
+        <div id="thankYou"></div>
+    </div>
 
     <script>
         async function fetchAverage() {
             const response = await fetch(`/get_average?product_id={{ product.id }}`);
             const data = await response.json();
-            document.getElementById('averageDisplay').textContent =
-                `Average Rating: ${data.average} ⭐ (${data.total} ratings)`;
+            if (data.total > 0) {
+                document.getElementById('averageDisplay').textContent =
+                    `Average Rating: ${data.average} ⭐ (${data.total} ratings)`;
+            }
         }
         document.getElementById('ratingForm').addEventListener('submit', async function(event) {
-            event.preventDefault(); // prevent form from reloading the page
+            event.preventDefault();
 
             const rating = document.querySelector('input[name="rating"]:checked')?.value;
             if (rating) {
@@ -168,170 +255,7 @@
             }
         });
 
-        // Load average when page loads
         fetchAverage();
     </script>
-
 </body>
 </html>
-=======
-
-        <!-- Product Details -->
-        <div class="col-md-6">
-            <h1 class="h2 mb-3">{{ product.name }}</h1>
-            
-            <!-- Rating -->
-            <div class="mb-3">
-                <div class="stars mb-1">
-                    {% set avg_rating = product.average_rating if product.average_rating is defined else 0 %}
-                    {% for i in range(1, 6) %}
-                        <i class="fas fa-star fs-5 {% if i <= avg_rating %}text-warning{% else %}text-muted{% endif %}"></i>
-                    {% endfor %}
-                </div>
-                <span class="text-muted">{{ product.rating_count if product.rating_count is defined else 0 }} reviews</span>
-            </div>
-
-            <!-- Price -->
-            <div class="mb-4">
-                <span class="h3 text-primary">${{ "%.2f"|format(product.price) }}</span>
-            </div>
-
-            <!-- Stock Status -->
-            <div class="mb-4">
-                {% if product.quantity|int > 0 %}
-                    <span class="badge bg-success fs-6">
-                        <i class="fas fa-check me-1"></i>{{ product.quantity }} in stock
-                    </span>
-                {% else %}
-                    <span class="badge bg-danger fs-6">
-                        <i class="fas fa-times me-1"></i>Out of stock
-                    </span>
-                {% endif %}
-            </div>
-
-            <!-- Add to Cart Form -->
-            {% if product.quantity|int > 0 %}
-                <form method="POST" action="{{ url_for('add_to_cart', product_id=product.id) }}" class="mb-4">
-                    <input type="hidden" name="product_id" value="{{ product.id }}">
-                    <div class="row g-3 align-items-end">
-                        <div class="col-auto">
-                            <label for="quantity" class="form-label">Quantity</label>
-                            <select name="quantity" id="quantity" class="form-select" style="width: auto;">
-                                {% for i in range(1, [product.quantity|int + 1, 11]|min) %}
-                                    <option value="{{ i }}">{{ i }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-auto">
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="fas fa-cart-plus me-2"></i>Add to Cart
-                            </button>
-                        </div>
-                    </div>
-                </form>
-            {% endif %}
-
-            <!-- Product Description -->
-            <div class="mb-4">
-                <h4>Description</h4>
-                <p class="text-muted">{{ product.description }}</p>
-            </div>
-
-            <!-- Product Details -->
-            <div class="mb-4">
-                <h4>Product Details</h4>
-                <ul class="list-unstyled">
-                    <li><strong>Category:</strong> N/A</li>
-                    <li><strong>SKU:</strong> #{{ "%06d"|format(product.id) }}</li>
-                    <li><strong>Availability:</strong> 
-                        {% if product.quantity|int > 0 %}
-                            In Stock ({{ product.quantity }} available)
-                        {% else %}
-                            Out of Stock
-                        {% endif %}
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </div>
-
-    <!-- Reviews Section -->
-    <div class="row mt-5">
-        <div class="col-12">
-            <h3>Customer Reviews</h3>
-            
-            <!-- Add Review Form -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">Write a Review</h5>
-                </div>
-                <div class="card-body">
-                    <form method="POST" action="{{ url_for('add_rating') }}">
-                        <input type="hidden" name="product_id" value="{{ product.id }}">
-                        
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label for="reviewer_name" class="form-label">Your Name</label>
-                                <input type="text" class="form-control" id="reviewer_name" name="reviewer_name" 
-                                       placeholder="Enter your name">
-                            </div>
-                            <div class="col-md-6">
-                                <label for="rating" class="form-label">Rating</label>
-                                <select class="form-select" id="rating" name="rating" required>
-                                    <option value="">Select rating</option>
-                                    <option value="5">⭐⭐⭐⭐⭐ Excellent</option>
-                                    <option value="4">⭐⭐⭐⭐ Very Good</option>
-                                    <option value="3">⭐⭐⭐ Good</option>
-                                    <option value="2">⭐⭐ Fair</option>
-                                    <option value="1">⭐ Poor</option>
-                                </select>
-                            </div>
-                            <div class="col-12">
-                                <label for="review" class="form-label">Review (Optional)</label>
-                                <textarea class="form-control" id="review" name="review" rows="3" 
-                                          placeholder="Share your thoughts about this product..."></textarea>
-                            </div>
-                            <div class="col-12">
-                                <button type="submit" class="btn btn-primary">Submit Review</button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Existing Reviews -->
-            {% if ratings %}
-                <div class="row g-4">
-                    {% for rating in ratings %}
-                        <div class="col-12">
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <div>
-                                            <h6 class="mb-1">{{ rating.reviewer_name }}</h6>
-                                            <div class="stars">
-                                                {% for i in range(1, 6) %}
-                                                    <i class="fas fa-star {% if i <= rating.rating %}text-warning{% else %}text-muted{% endif %}"></i>
-                                                {% endfor %}
-                                            </div>
-                                        </div>
-                                        <small class="text-muted">{{ rating.created_at.strftime('%B %d, %Y') }}</small>
-                                    </div>
-                                    {% if rating.review %}
-                                        <p class="mb-0">{{ rating.review }}</p>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="text-center py-4">
-                    <p class="text-muted">No reviews yet. Be the first to review this product!</p>
-                </div>
-            {% endif %}
-        </div>
-    </div>
-</div>
-{% endblock %}
->>>>>>> 9f6da84c8da2e6089ee80b30c07756d652f9d79a
