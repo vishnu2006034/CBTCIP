@@ -4,61 +4,228 @@
     <meta charset="UTF-8" />
     <title>Shopping Cart</title>
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            background-color: white;
+            padding: 20px 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
         table {
-            width: 80%;
-            margin: 20px auto;
+            width: 100%;
             border-collapse: collapse;
         }
-        th, td {
-            padding: 12px;
-            border: 1px solid #ddd;
-            text-align: center;
+        thead {
+            background-color: #007bff;
+            color: white;
         }
-        th {
-            background-color: #f4f4f4;
+        th, td {
+            padding: 15px 12px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+        tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+        .product-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .product-info img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .product-name {
+            font-weight: bold;
+            color: #333;
+        }
+        .quantity-input {
+            width: 60px;
+            padding: 6px;
+            font-size: 16px;
+            text-align: center;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .remove-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+        .remove-btn:hover {
+            background-color: #b02a37;
         }
         .total-row td {
             font-weight: bold;
+            font-size: 18px;
+            color: #222;
+        }
+        .checkout-btn {
+            display: block;
+            width: 100%;
+            background-color: #28a745;
+            color: white;
+            font-size: 18px;
+            padding: 15px 0;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 25px;
+            transition: background-color 0.3s ease;
+            text-decoration: none;
+            text-align: center;
+        }
+        .checkout-btn:hover {
+            background-color: #1e7e34;
         }
         .empty-cart {
             text-align: center;
-            margin: 40px;
-            font-size: 1.2em;
+            font-size: 1.3em;
+            color: #666;
+            margin: 60px 0;
+        }
+        @media (max-width: 600px) {
+            .product-info {
+                flex-direction: column;
+                gap: 8px;
+            }
+            .product-info img {
+                width: 100%;
+                height: auto;
+            }
+            .quantity-input {
+                width: 100%;
+            }
+            th, td {
+                padding: 10px 6px;
+                font-size: 14px;
+            }
+            .checkout-btn {
+                font-size: 16px;
+                padding: 12px 0;
+            }
         }
     </style>
 </head>
 <body>
-    <h1 style="text-align:center;">Your Shopping Cart</h1>
-    {% if cart and cart.items %}
-    <table>
-        <thead>
-            <tr>
-                <th>Product</th>
-                <th>Quantity</th>
-                <th>Price (each)</th>
-                <th>Subtotal</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in cart.items %}
-            <tr>
-                <td>{{ item.product.name }}</td>
-                <td>{{ item.quantity }}</td>
-                <td>${{ "%.2f"|format(item.product.price) }}</td>
-                <td>${{ "%.2f"|format(item.product.price * item.quantity) }}</td>
-            </tr>
-            {% endfor %}
-            <tr class="total-row">
-                <td colspan="3">Total</td>
-                <td>${{ "%.2f"|format(total) }}</td>
-            </tr>
-            <tr class="total-row" ,align="right">
-                <td><a href="{{url_for('checkout')}}"><button>Buy</button></a></td>
-            </tr>
-        </tbody>
-    </table>
-    {% else %}
-    <p class="empty-cart">Your cart is empty.</p>
-    {% endif %}
+    <div class="container">
+        <h1>Your Shopping Cart</h1>
+        {% if cart and cart.items %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Price (each)</th>
+                    <th>Subtotal</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in cart.items %}
+                <tr>
+                    <td>
+                        <div class="product-info">
+                            <img src="{{ item.product.image_url }}" alt="{{ item.product.name }}">
+                            <span class="product-name">{{ item.product.name }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <input type="number" min="1" value="{{ item.quantity }}" class="quantity-input" data-item-id="{{ item.id }}">
+                    </td>
+                    <td>${{ "%.2f"|format(item.product.price) }}</td>
+                    <td>${{ "%.2f"|format(item.product.price * item.quantity) }}</td>
+                    <td>
+                        <button class="remove-btn" data-item-id="{{ item.id }}">Remove</button>
+                    </td>
+                </tr>
+                {% endfor %}
+                <tr class="total-row">
+                    <td colspan="3" style="text-align:right;">Total</td>
+                    <td colspan="2">${{ "%.2f"|format(total) }}</td>
+                </tr>
+            </tbody>
+        </table>
+        <a href="{{ url_for('checkout') }}" class="checkout-btn">Proceed to Checkout</a>
+        {% else %}
+        <p class="empty-cart">Your cart is empty.</p>
+        {% endif %}
+    </div>
+
+    <script>
+        // Add event listeners for quantity change and remove buttons
+        document.querySelectorAll('.quantity-input').forEach(input => {
+            input.addEventListener('change', async (e) => {
+                const itemId = e.target.getAttribute('data-item-id');
+                const newQuantity = e.target.value;
+                if (newQuantity < 1) {
+                    e.target.value = 1;
+                    return;
+                }
+                try {
+                    const response = await fetch('/update_cart_item_quantity', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({item_id: itemId, quantity: newQuantity})
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        // Optionally, reload the page or update subtotal and total dynamically
+                        location.reload();
+                    } else {
+                        alert('Failed to update quantity: ' + result.message);
+                    }
+                } catch (error) {
+                    alert('Error updating quantity: ' + error);
+                }
+            });
+        });
+
+        document.querySelectorAll('.remove-btn').forEach(button => {
+            button.addEventListener('click', async (e) => {
+                const itemId = e.target.getAttribute('data-item-id');
+                try {
+                    const response = await fetch('/remove_cart', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({item_id: itemId})
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        // Remove the row from the table
+                        const row = button.closest('tr');
+                        row.parentNode.removeChild(row);
+                        // Optionally, reload the page or update total price dynamically
+                        location.reload();
+                    } else {
+                        alert('Failed to remove item: ' + result.message);
+                    }
+                } catch (error) {
+                    alert('Error removing item: ' + error);
+                }
+            });
+        });
+    </script>
 </body>
 </html>

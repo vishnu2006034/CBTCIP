@@ -1,15 +1,112 @@
 <!DOCTYPE html>
-<html>
-<head><title>Buy Now - {{ product.name }}</title></head>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Buy Now - {{ product.name }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            background-color: white;
+            padding: 30px 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .product-image {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .product-details {
+            font-size: 18px;
+            color: #555;
+            margin-bottom: 30px;
+        }
+        label {
+            font-size: 16px;
+            color: #333;
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        input[type="number"] {
+            width: 100px;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            text-align: center;
+            transition: border-color 0.3s ease;
+        }
+        input[type="number"]:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+        button {
+            margin-top: 30px;
+            background-color: #28a745;
+            color: white;
+            font-size: 18px;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #1e7e34;
+        }
+        @media (max-width: 600px) {
+            .container {
+                margin: 20px;
+                padding: 20px;
+            }
+            h1 {
+                font-size: 24px;
+            }
+            .product-details {
+                font-size: 16px;
+            }
+            input[type="number"] {
+                width: 80px;
+                font-size: 14px;
+            }
+            button {
+                font-size: 16px;
+                padding: 10px 20px;
+            }
+        }
+    </style>
+</head>
 <body>
-    <h1>Buy Now: {{ product.name }}</h1>
-    <p>Price: ₹{{ product.price }}</p>
-    <p>Stock Available: {{ product.stock }}</p>
-
-    <form method="post">
-        <label>Enter Quantity:</label>
-        <input type="number" name="quantity" min="1" max="{{ product.stock }}" required>
-        <button type="submit">Confirm Purchase</button>
-    </form>
+    <div class="container">
+        <h1>Buy Now: {{ product.name }}</h1>
+        {% if product.image_url %}
+        <img src="{{ product.image_url }}" alt="{{ product.name }}" class="product-image" />
+        {% endif %}
+        <div class="product-details">
+            <p>Price: ₹{{ product.price }}</p>
+            <p>Stock Available: {{ product.quantity }}</p>
+        </div>
+        <form method="post">
+            <label for="quantity">Enter Quantity:</label>
+            <input type="number" id="quantity" name="quantity" min="1" max="{{ product.quantity }}" required />
+            <button type="submit">Confirm Purchase</button>
+        </form>
+    </div>
 </body>
 </html>

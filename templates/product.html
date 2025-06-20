@@ -97,11 +97,147 @@
             <div class="product-description">{{ product.description }}</div>
             <div class="product-price">${{ "%.2f"|format(product.price) }}</div>
             <div class="product-quantity">Available Quantity: {{ product.quantity }}</div>
+    <div id="averageDisplay" style="margin-bottom: 15px; font-weight: bold;">
+        {% if total is not defined or total == 0 %}
+            No ratings yet
+        {% else %}
+            Average Rating: {{ average }} ⭐ ({{ total }} ratings)
+        {% endif %}
+    </div>
+    <script>
+        async function fetchAverage() {
+            const response = await fetch(`/get_average?product_id={{ product.id }}`);
+            const data = await response.json();
+            if (data.total > 0) {
+                document.getElementById('averageDisplay').textContent =
+                    `Average Rating: ${data.average} ⭐ (${data.total} ratings)`;
+            }
+        }
+        document.getElementById('ratingForm').addEventListener('submit', async function(event) {
+            event.preventDefault(); // prevent form from reloading the page
+
+            const rating = document.querySelector('input[name="rating"]:checked')?.value;
+            if (rating) {
+                const response = await fetch('/submit_rating', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({rating: parseInt(rating), product_id: "{{ product.id }}"})
+                });
+                if (response.ok) {
+                    document.getElementById('thankYou').textContent = `Thank you for your rating!`;
+                    await fetchAverage();
+                } else {
+                    document.getElementById('thankYou').textContent = `Error submitting rating.`;
+                }
+                document.getElementById('result').textContent = `Thank you! You rated us: ${rating} star(s)`;
+            } else {
+                document.getElementById('result').textContent = `Please select a rating.`;
+            }
+        });
+
+        // Load average when page loads
+        fetchAverage();
+    </script>
             <div class="buttons">
                 <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="btn btn-add-to-cart">Add to Cart</a>
                 <a href="{{ url_for('buy', product_id=product.id) }}" class="btn btn-buy-now">Buy Now</a>
             </div>
         </div>
     </div>
+    <h2>Rate Our Service</h2>
+
+    <style>
+        .star-rating {
+            direction: rtl;
+            font-size: 2rem;
+            unicode-bidi: bidi-override;
+            display: inline-flex;
+        }
+        .star-rating input[type="radio"] {
+            display: none;
+        }
+        .star-rating label {
+            color: #ccc;
+            cursor: pointer;
+            padding: 0 5px;
+            transition: color 0.2s;
+        }
+        .star-rating input[type="radio"]:checked ~ label,
+        .star-rating label:hover,
+        .star-rating label:hover ~ label {
+            color: #f5b301;
+        }
+        #averageDisplay {
+            margin-top: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        #thankYou {
+            margin-top: 10px;
+            color: green;
+            font-weight: bold;
+        }
+        #result {
+            margin-top: 10px;
+            font-style: italic;
+        }
+    </style>
+
+    <form id="ratingForm" class="star-rating">
+        <input type="radio" id="star5" name="rating" value="5" />
+        <label for="star5" title="5 stars">&#9733;</label>
+
+        <input type="radio" id="star4" name="rating" value="4" />
+        <label for="star4" title="4 stars">&#9733;</label>
+
+        <input type="radio" id="star3" name="rating" value="3" />
+        <label for="star3" title="3 stars">&#9733;</label>
+
+        <input type="radio" id="star2" name="rating" value="2" />
+        <label for="star2" title="2 stars">&#9733;</label>
+
+        <input type="radio" id="star1" name="rating" value="1" />
+        <label for="star1" title="1 star">&#9733;</label>
+
+        <button type="submit" style="margin-left: 15px; padding: 5px 15px;">Submit</button>
+    </form>
+
+    <div class="result" id="result"></div>
+    <div id="averageDisplay"></div>
+    <div id="thankYou"></div>
+
+    <script>
+        async function fetchAverage() {
+            const response = await fetch(`/get_average?product_id={{ product.id }}`);
+            const data = await response.json();
+            document.getElementById('averageDisplay').textContent =
+                `Average Rating: ${data.average} ⭐ (${data.total} ratings)`;
+        }
+        document.getElementById('ratingForm').addEventListener('submit', async function(event) {
+            event.preventDefault(); // prevent form from reloading the page
+
+            const rating = document.querySelector('input[name="rating"]:checked')?.value;
+            if (rating) {
+                const response = await fetch('/submit_rating', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({rating: parseInt(rating), product_id: "{{ product.id }}"})
+                });
+                if (response.ok) {
+                    document.getElementById('thankYou').textContent = `Thank you for your rating!`;
+                    await fetchAverage();
+                } else {
+                    document.getElementById('thankYou').textContent = `Error submitting rating.`;
+                }
+                document.getElementById('result').textContent = `Thank you! You rated us: ${rating} star(s)`;
+            } else {
+                document.getElementById('result').textContent = `Please select a rating.`;
+            }
+        });
+
+        // Load average when page loads
+        fetchAverage();
+    </script>
+
 </body>
 </html>

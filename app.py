@@ -1,4 +1,4 @@
-from flask import Flask,render_template,request,redirect,url_for,session
+from flask import Flask,render_template,request,redirect,url_for,session,jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 app=Flask(__name__,template_folder='templates',static_folder='static',static_url_path='/')
@@ -56,6 +56,12 @@ class Order(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     customer = db.relationship('Customer', backref='orders')
 
+class Rating(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    score = db.Column(db.Integer, nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
+    product = db.relationship('Product', backref='ratings')
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -112,7 +118,18 @@ def main():
         products_query = products_query.order_by(Product.name.desc())
 
     products = products_query.all()
-    return render_template('main.html', products=products, search_query=search_query, sort_option=sort_option)
+
+    # Calculate average ratings per product
+    product_ids = [product.id for product in products]
+    ratings_data = db.session.query(
+        Rating.product_id,
+        db.func.avg(Rating.score).label('average_rating'),
+        db.func.count(Rating.id).label('rating_count')
+    ).filter(Rating.product_id.in_(product_ids)).group_by(Rating.product_id).all()
+
+    ratings_dict = {str(r.product_id): {'average': round(r.average_rating, 2), 'count': r.rating_count} for r in ratings_data}
+
+    return render_template('main.html', products=products, search_query=search_query, sort_option=sort_option, ratings=ratings_dict)
 
 def get_current_customer():
     if 'customer_id' in session:
@@ -154,6 +171,24 @@ def view_cart():
     total = sum(item.product.price * item.quantity for item in cart.items) if cart else 0
     return render_template('cart.html', cart=cart, total=total)
 
+@app.route('/remove_cart_item/<int:item_id>', methods=['POST'])
+def remove_cart_item(item_id):
+    customer = get_current_customer()
+    if not customer:
+        return jsonify({'success': False, 'message': 'Not logged in'}), 401
+
+    cart = customer.cart
+    if not cart:
+        return jsonify({'success': False, 'message': 'Cart not found'}), 404
+
+    cart_item = CartItem.query.filter_by(id=item_id, cart_id=cart.id).first()
+    if not cart_item:
+        return jsonify({'success': False, 'message': 'Cart item not found'}), 404
+
+    db.session.delete(cart_item)
+    db.session.commit()
+    return jsonify({'success': True, 'message': 'Item removed'})
+
 
 @app.route('/checkout', methods=['GET', 'POST'])
 def checkout():
@@ -184,10 +219,17 @@ def checkout():
     total = sum(item.product.price * item.quantity for item in customer.cart.items)
     return render_template('payment.html', total=total)
 
+
 @app.route('/product/<int:product_id>')
 def product(product_id):
     product = Product.query.get(product_id)
-    return render_template('product.html', product=product)
+    total_ratings = Rating.query.filter_by(product_id=product_id).count()
+    if total_ratings == 0:
+        average = 0
+    else:
+        sum_ratings = db.session.query(db.func.sum(Rating.score)).filter(Rating.product_id == product_id).scalar()
+        average = sum_ratings / total_ratings
+    return render_template('product.html', product=product, average=round(average, 2), total=total_ratings)
 
 @app.route('/buy/<int:product_id>',methods=['GET','POST'])
 def buy(product_id):
@@ -206,10 +248,96 @@ def buy(product_id):
             return f"Not enough quantity for {product.name}"
     return render_template('buy.html',product=product)
 
+@app.route('/submit_rating', methods=['POST'])
+def submit_rating():
+    data = request.get_json()
+    score = data.get('rating')
+    product_id = data.get('product_id')
+    if score is None or not (1 <= score <= 5) or product_id is None:
+        return jsonify({'message': 'Invalid rating or product ID'}), 400
+    new_rating = Rating(score=score, product_id=product_id)
+    db.session.add(new_rating)
+    db.session.commit()
+    return jsonify({'message': 'Rating submitted successfully'}), 200
+
+@app.route('/get_average', methods=['GET'])
+def get_average():
+    product_id = request.args.get('product_id', type=int)
+    if product_id is None:
+        return jsonify({'average': 0, 'total': 0})
+    total_ratings = Rating.query.filter_by(product_id=product_id).count()
+    if total_ratings == 0:
+        return jsonify({'average': 0, 'total': 0})
+    sum_ratings = db.session.query(db.func.sum(Rating.score)).filter(Rating.product_id == product_id).scalar()
+    average = sum_ratings / total_ratings
+    return jsonify({'average': round(average, 2), 'total': total_ratings})
+
+@app.route('/remove_cart', methods=['POST'])
+def remove_cart():
+    customer = get_current_customer()
+    if not customer:
+        return jsonify({'success': False, 'message': 'Not logged in'}), 401
+
+    cart = customer.cart
+    if not cart:
+        return jsonify({'success': False, 'message': 'Cart not found'}), 404
+
+    data = request.get_json()
+    item_id = data.get('item_id')
+    if not item_id:
+        return jsonify({'success': False, 'message': 'Item ID not provided'}), 400
+
+    cart_item = CartItem.query.filter_by(id=item_id, cart_id=cart.id).first()
+    if not cart_item:
+        return jsonify({'success': False, 'message': 'Cart item not found'}), 404
+
+    db.session.delete(cart_item)
+    db.session.commit()
+    return jsonify({'success': True, 'message': 'Item removed'})
+
+@app.route('/update_cart_item_quantity', methods=['POST'])
+def update_cart_item_quantity():
+    customer = get_current_customer()
+    if not customer:
+        return jsonify({'success': False, 'message': 'Not logged in'}), 401
+
+    cart = customer.cart
+    if not cart:
+        return jsonify({'success': False, 'message': 'Cart not found'}), 404
+
+    data = request.get_json()
+    item_id = data.get('item_id')
+    quantity = data.get('quantity')
+
+    if not item_id or quantity is None:
+        return jsonify({'success': False, 'message': 'Item ID and quantity are required'}), 400
+
+    try:
+        quantity = int(quantity)
+        if quantity < 1:
+            return jsonify({'success': False, 'message': 'Quantity must be at least 1'}), 400
+    except ValueError:
+        return jsonify({'success': False, 'message': 'Invalid quantity'}), 400
+
+    cart_item = CartItem.query.filter_by(id=item_id, cart_id=cart.id).first()
+    if not cart_item:
+        return jsonify({'success': False, 'message': 'Cart item not found'}), 404
+
+    cart_item.quantity = quantity
+    db.session.commit()
+    return jsonify({'success': True, 'message': 'Quantity updated'})
 @app.route('/logout')
 def logout():
     session.pop('customer_id', None)
     return redirect(url_for('custlogin'))
+
+@app.route('/order_history')
+def order_history():
+    customer = get_current_customer()
+    if not customer:
+        return redirect(url_for('custlogin'))
+    orders = customer.orders
+    return render_template('order.html', orders=orders)
 
 if __name__=='__main__':
     with app.app_context():
