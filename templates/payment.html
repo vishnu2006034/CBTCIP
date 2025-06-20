@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -145,3 +146,181 @@
     </script>
 </body>
 </html>
+=======
+{% extends "base.html" %}
+
+{% block title %}Checkout - ShopMart{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h2 mb-4">
+                <i class="fas fa-credit-card me-2"></i>Checkout
+            </h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Checkout Form -->
+        <div class="col-lg-8">
+            <form method="POST" action="{{ url_for('place_order') }}" id="checkoutForm">
+                <!-- Customer Information -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-user me-2"></i>Customer Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="customer_name" class="form-label">Full Name *</label>
+                                <input type="text" class="form-control" id="customer_name" name="customer_name" 
+                                       required placeholder="Enter your full name">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="customer_email" class="form-label">Email Address *</label>
+                                <input type="email" class="form-control" id="customer_email" name="customer_email" 
+                                       required placeholder="Enter your email">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="customer_phone" class="form-label">Phone Number</label>
+                                <input type="tel" class="form-control" id="customer_phone" name="customer_phone" 
+                                       placeholder="Enter your phone number">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Shipping Information -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-truck me-2"></i>Shipping Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="shipping_address" class="form-label">Shipping Address *</label>
+                            <textarea class="form-control" id="shipping_address" name="shipping_address" 
+                                      rows="4" required placeholder="Enter your complete shipping address"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Method -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-credit-card me-2"></i>Payment Method
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Demo Mode:</strong> This is a demonstration checkout. No actual payment will be processed.
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="payment_method" id="cash_on_delivery" 
+                                   value="cash_on_delivery" checked>
+                            <label class="form-check-label" for="cash_on_delivery">
+                                <i class="fas fa-money-bill-wave me-2"></i>Cash on Delivery
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{{ url_for('cart') }}" class="btn btn-outline-secondary me-md-2">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Cart
+                    </a>
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <i class="fas fa-check me-2"></i>Place Order
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    {% for item in cart_items %}
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-0">{{ item.product.name }}</h6>
+                                <small class="text-muted">Qty: {{ item.quantity }}</small>
+                            </div>
+                            <span class="fw-bold">${{ "%.2f"|format(item.subtotal) }}</span>
+                        </div>
+                    {% endfor %}
+                    
+                    <hr>
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal:</span>
+                        <span>${{ "%.2f"|format(total) }}</span>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Shipping:</span>
+                        <span class="text-success">FREE</span>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Tax:</span>
+                        <span>$0.00</span>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="d-flex justify-content-between">
+                        <strong>Total:</strong>
+                        <strong class="text-primary fs-4">${{ "%.2f"|format(total) }}</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Notice -->
+            <div class="card mt-3">
+                <div class="card-body">
+                    <div class="d-flex align-items-center text-success">
+                        <i class="fas fa-shield-alt me-2"></i>
+                        <small>Your information is secure and protected</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+    const requiredFields = ['customer_name', 'customer_email', 'shipping_address'];
+    let isValid = true;
+    
+    requiredFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (!field.value.trim()) {
+            field.classList.add('is-invalid');
+            isValid = false;
+        } else {
+            field.classList.remove('is-invalid');
+        }
+    });
+    
+    if (!isValid) {
+        e.preventDefault();
+        alert('Please fill in all required fields.');
+    }
+});
+</script>
+{% endblock %}
+>>>>>>> 9f6da84c8da2e6089ee80b30c07756d652f9d79a

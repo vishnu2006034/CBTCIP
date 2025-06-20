@@ -137,7 +137,7 @@ def get_current_customer():
     return None
 
 
-@app.route('/add_to_cart/<int:product_id>')
+@app.route('/add_to_cart/<int:product_id>', methods=['POST', 'GET'])
 def add_to_cart(product_id):
     customer = get_current_customer()
     if not customer:
@@ -190,6 +190,18 @@ def remove_cart_item(item_id):
     return jsonify({'success': True, 'message': 'Item removed'})
 
 
+@app.context_processor
+def inject_cart():
+    customer = None
+    cart = None
+    total = 0
+    if 'customer_id' in session:
+        customer = Customer.query.get(session['customer_id'])
+        if customer and customer.cart:
+            cart = customer.cart
+            total = sum(item.product.price * item.quantity for item in cart.items)
+    return dict(cart=cart, total=total)
+
 @app.route('/checkout', methods=['GET', 'POST'])
 def checkout():
     customer = get_current_customer()
@@ -205,11 +217,15 @@ def checkout():
 
         # Empty the cart
         for item in customer.cart.items:
-            product=item.product
-            if int(product.quantity)>=item.quantity:
-                product.quantity =int(product.quantity)-item.quantity
+            product = item.product
+            try:
+                product_quantity = int(product.quantity)
+            except (ValueError, TypeError):
+                return f"Invalid quantity value for {product.name}"
+            if product_quantity >= item.quantity:
+                product.quantity = str(product_quantity - item.quantity)
             else:
-                return f"not enough quantity for{product.name}"
+                return f"Not enough quantity for {product.name}"
         for item in customer.cart.items:
             db.session.delete(item)
         db.session.commit()
@@ -248,6 +264,7 @@ def buy(product_id):
             return f"Not enough quantity for {product.name}"
     return render_template('buy.html',product=product)
 
+<<<<<<< HEAD
 @app.route('/submit_rating', methods=['POST'])
 def submit_rating():
     data = request.get_json()
@@ -326,6 +343,24 @@ def update_cart_item_quantity():
     cart_item.quantity = quantity
     db.session.commit()
     return jsonify({'success': True, 'message': 'Quantity updated'})
+=======
+@app.route('/add_rating', methods=['POST'])
+def add_rating():
+    product_id = request.form.get('product_id')
+    reviewer_name = request.form.get('reviewer_name')
+    rating_value = request.form.get('rating')
+    review_text = request.form.get('review')
+
+    if not product_id or not reviewer_name or not rating_value:
+        return "Missing required fields", 400
+
+    # Here you would add logic to save the rating to the database
+    # For now, just simulate success
+
+    # Redirect back to the product page
+    return redirect(url_for('product', product_id=product_id))
+
+>>>>>>> 9f6da84c8da2e6089ee80b30c07756d652f9d79a
 @app.route('/logout')
 def logout():
     session.pop('customer_id', None)
