@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Merchant Product Management</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        input, select { margin: 5px; padding: 5px; }
+        button { padding: 8px 12px; margin: 5px; }
+        table { border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 8px 12px; }
+    </style>
+</head>
+<body>
+
+<h2>Manage Products</h2>
+
+<form id="productForm">
+    <input type="number" id="merchant_id" placeholder="Merchant ID" required><br>
+    <input type="number" id="product_id" placeholder="Product ID (for update/delete)"><br>
+    <input type="text" id="name" placeholder="Product Name"><br>
+    <textarea id="description" placeholder="Description"></textarea><br>
+    <input type="number" id="price" placeholder="Price"><br>
+    <input type="number" id="quantity" placeholder="Quantity"><br>
+    
+    <input type="text" id="image_url" placeholder="Image URL"><br>
+
+    <button type="button" onclick="addProduct()">Add</button>
+    <button type="button" onclick="updateProduct()">Update</button>
+    <button type="button" onclick="deleteProduct()">Delete</button>
+    <button type="button" onclick="listProducts()">List</button>
+</form>
+
+<h3>Products List</h3>
+<table id="productTable">
+    <thead>
+        <tr>
+            <th>ID</th><th>Name</th><th>Price</th><th>Qty</th><th>Category</th><th>Image</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<script>
+const apiUrl = 'http://127.0.0.1:5000/manage_product'; // adjust if your backend runs elsewhere
+
+function getFormData() {
+    return {
+        merchant_id: parseInt(document.getElementById("merchant_id").value),
+        product_id: parseInt(document.getElementById("product_id").value),
+        name: document.getElementById("name").value,
+        description: document.getElementById("description").value,
+        price: parseFloat(document.getElementById("price").value),
+        quantity: parseInt(document.getElementById("quantity").value),
+        
+        image_url: document.getElementById("image_url").value
+    };
+}
+
+async function addProduct() {
+    const data = getFormData();
+    data.mode = "add";
+    const res = await fetch(apiUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
+    const result = await res.json();
+    alert(result.status);
+}
+
+async function updateProduct() {
+    const data = getFormData();
+    data.mode = "update";
+    const res = await fetch(apiUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
+    const result = await res.json();
+    alert(result.status);
+}
+
+async function deleteProduct() {
+    const data = getFormData();
+    data.mode = "delete";
+    const res = await fetch(apiUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
+    const result = await res.json();
+    alert(result.status);
+}
+
+async function listProducts() {
+    const merchant_id = parseInt(document.getElementById("merchant_id").value);
+    const res = await fetch(apiUrl, { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: "list", merchant_id }) });
+    const products = await res.json();
+
+    const tbody = document.querySelector("#productTable tbody");
+    tbody.innerHTML = "";
+    products.forEach(p => {
+        const row = `<tr>
+            <td>${p.id}</td>
+            <td>${p.name}</td>
+            <td>${p.price}</td>
+            <td>${p.quantity}</td>
+            <td>${p.category}</td>
+            <td><img src="${p.image_url}" width="50"></td>
+        </tr>`;
+        tbody.innerHTML += row;
+    });
+}
+</script>
+
+</body>
+</html>

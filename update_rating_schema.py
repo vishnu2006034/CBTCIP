@@ -7,15 +7,15 @@ def add_product_id_column():
         try:
             # Check if column already exists
             with db.engine.connect() as connection:
-                result = connection.execute(text("PRAGMA table_info(rating);"))
+                result = connection.execute(text("PRAGMA table_info(merchant);"))
                 columns = [row[1] for row in result]
-                if 'product_id' in columns:
+                if 'phone' in columns:
                     print("Column 'product_id' already exists in 'rating' table.")
                     return
 
                 # Add the product_id column
-                connection.execute(text("ALTER TABLE rating ADD COLUMN product_id INTEGER;"))
-                print("Column 'product_id' added to 'rating' table.")
+                connection.execute(text("ALTER TABLE merchant ADD COLUMN phone INTEGER;"))
+                print("Column 'phone' added to 'merchant' table.")
 
             # Optional: You may want to set foreign key constraints manually if needed
         except OperationalError as e:

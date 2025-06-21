@@ -21,12 +21,15 @@ class Customer(db.Model):
 class Merchant(db.Model):
     id = db.Column(db.Integer , primary_key=True)
     name = db.Column(db.String , nullable = False)
+    phone = db.Column(db.Integer , nullable = False)
     email = db.Column(db.String , nullable = False)
     password = db.Column(db.String , nullable = False)
-    products = db.Column(db.String , db.ForeignKey('product.id'))
+    # products = db.Column(db.String , db.ForeignKey('product.id'))
+    products = db.relationship('Product', backref='merchant', lazy=True)
 
 class Product(db.Model):
     id = db.Column(db.Integer , primary_key=True)
+    merchant_id = db.Column(db.Integer, db.ForeignKey('merchant.id'), nullable=False)
     name = db.Column(db.String , nullable = False)
     description = db.Column(db.String , nullable = False)
     quantity = db.Column(db.String , nullable = False)
@@ -76,6 +79,30 @@ def custlogin():
             session['customer_id']=customer.id
             return redirect(url_for('main'))
     return render_template('custlogin.html')
+
+@app.route('/merclogin',methods=['GET','POST'])
+def merclogin():
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        merchant = Merchant.query.filter_by(email=email).first()
+        if merchant and merchant.password == password:
+            session['merchant_id']=merchant.id
+            return redirect(url_for('mercmain'))
+    return render_template('merclogin.html')
+
+@app.route('/mercreg',methods=['GET','POST'])
+def mercreg():
+    if request.method == 'POST':
+        name = request.form['name']
+        email = request.form['email']
+        password = request.form['password']
+        phone = request.form['phone']
+        new = Merchant(name=name,email=email,password=password,phone=phone)
+        db.session.add(new)
+        db.session.commit()
+        return redirect(url_for('merclogin'))
+    return render_template('mercreg.html')
 
 @app.route('/custreg',methods=['GET','POST'])
 def custreg():
@@ -130,6 +157,72 @@ def main():
     ratings_dict = {str(r.product_id): {'average': round(r.average_rating, 2), 'count': r.rating_count} for r in ratings_data}
 
     return render_template('main.html', products=products, search_query=search_query, sort_option=sort_option, ratings=ratings_dict)
+
+@app.route('/manage_product_page')
+def manage_product_page():
+    return render_template("manage.html")
+
+@app.route('/manage_product', methods=['POST'])
+def manage_product():
+    data = request.json
+    mode = data.get('mode')
+    
+    if mode == 'add':
+        product = Product(
+            merchant_id=data['merchant_id'],
+            name=data['name'],
+            description=data['description'],
+            price=data['price'],
+            quantity=data['quantity'],
+            
+            image_url=data['image_url']
+        )
+        db.session.add(product)
+        db.session.commit()
+        return jsonify({'status': 'Product added successfully'})
+    
+    elif mode == 'update':
+        product = Product.query.filter_by(id=data['product_id'], merchant_id=data['merchant_id']).first()
+        if not product:
+            return jsonify({'error': 'Product not found'}), 404
+        product.name = data['name']
+        product.description = data['description']
+        product.price = data['price']
+        product.quantity = data['quantity']
+        
+        product.image_url = data['image_url']
+        db.session.commit()
+        return jsonify({'status': 'Product updated successfully'})
+    
+    elif mode == 'delete':
+        product = Product.query.filter_by(id=data['product_id'], merchant_id=data['merchant_id']).first()
+        if not product:
+            return jsonify({'error': 'Product not found'}), 404
+        db.session.delete(product)
+        db.session.commit()
+        return jsonify({'status': 'Product deleted successfully'})
+    
+    elif mode == 'list':
+        merchant_id = data['merchant_id']
+        products = Product.query.filter_by(merchant_id=merchant_id).all()
+        product_list = [{
+            'id': p.id,
+            'name': p.name,
+            'description': p.description,
+            'price': p.price,
+            'quantity': p.quantity,
+            
+            'image_url': p.image_url
+        } for p in products]
+        return jsonify(product_list)
+    
+    else:
+        return jsonify({'error': 'Invalid mode'}), 400
+    return render_template('manage.html')
+
+@app.route('/mercmain',methods=['GET','POST'])
+def mercmain():
+    return render_template('mercmain.html')
 
 def get_current_customer():
     if 'customer_id' in session:
