@@ -49,7 +49,7 @@
         }
         .dashboard-cards {
             display: grid;
-            grid-template-columns: repeat(auto-fit,minmax(280px,1fr));
+            grid-template-columns: 1fr;
             gap: 30px;
         }
         .card {
@@ -129,6 +129,38 @@
                 <h2>Manage Products</h2>
                 <p>Add, edit, or remove your products to keep your store up to date.</p>
                 <a href="{{ url_for('manage_product_page') }}">Go to Products</a>
+            </div>
+            <div class="card">
+                <h2>Your Products</h2>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                    <thead>
+                        <tr style="background-color: #007bff; color: white;">
+                            <th style="padding: 8px; border: 1px solid #ddd;">ID</th>
+                            <th style="padding: 8px; border: 1px solid #ddd;">Name</th>
+                            <th style="padding: 8px; border: 1px solid #ddd;">Description</th>
+                            <th style="padding: 8px; border: 1px solid #ddd;">Price</th>
+                            <th style="padding: 8px; border: 1px solid #ddd;">Quantity</th>
+                            <th style="padding: 8px; border: 1px solid #ddd;">Image</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for merchant, product in product1 %}
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd;">{{ product.id }}</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">{{ product.name }}</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">{{ product.description }}</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">${{ "%.2f"|format(product.price) }}</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">{{ product.quantity }}</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;"><img src="{{ product.image_url }}" alt="{{ product.name }}" style="max-width: 100px; max-height: 100px;" /></td>
+                        </tr>
+                        <tr>
+                            <td colspan="6" style="padding: 8px; border: 1px solid #ddd; text-align: center;">
+                                
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
             <!--  -->
         </div>

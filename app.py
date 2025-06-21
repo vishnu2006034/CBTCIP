@@ -160,6 +160,7 @@ def main():
 
 @app.route('/manage_product_page')
 def manage_product_page():
+    
     return render_template("manage.html")
 
 @app.route('/manage_product', methods=['POST'])
@@ -211,7 +212,7 @@ def manage_product():
             'description': p.description,
             'price': p.price,
             'quantity': p.quantity,
-            
+
             'image_url': p.image_url
         } for p in products]
         return jsonify(product_list)
@@ -220,9 +221,14 @@ def manage_product():
         return jsonify({'error': 'Invalid mode'}), 400
     return render_template('manage.html')
 
+from flask import session, redirect, url_for
+
 @app.route('/mercmain',methods=['GET','POST'])
 def mercmain():
-    return render_template('mercmain.html')
+    if 'merchant_id' not in session:
+        return redirect(url_for('merclogin'))
+    product1 = db.session.query(Merchant, Product).join(Product, Merchant.id == Product.merchant_id).all()
+    return render_template('mercmain.html', product1=product1)
 
 def get_current_customer():
     if 'customer_id' in session:

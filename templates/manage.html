@@ -4,55 +4,173 @@
     <meta charset="UTF-8">
     <title>Merchant Product Management</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        input, select { margin: 5px; padding: 5px; }
-        button { padding: 8px 12px; margin: 5px; }
-        table { border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ccc; padding: 8px 12px; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f2f2f2;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 30px auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h2, h3 {
+            text-align: center;
+            color: #333;
+        }
+        form {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+        .form-group {
+            flex: 0 0 48%;
+            margin-bottom: 15px;
+        }
+        .form-group-full {
+            flex: 0 0 100%;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 600;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 15px;
+        }
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+        .button-group {
+            text-align: center;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: #fff;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+            font-size: 15px;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        img {
+            border-radius: 5px;
+        }
+        @media (max-width: 768px) {
+            .form-group {
+                flex: 0 0 100%;
+            }
+        }
     </style>
 </head>
 <body>
 
-<h2>Manage Products</h2>
+<div class="container">
+    <h2>Merchant Product Management</h2>
 
-<form id="productForm">
-    <input type="number" id="merchant_id" placeholder="Merchant ID" required><br>
-    <input type="number" id="product_id" placeholder="Product ID (for update/delete)"><br>
-    <input type="text" id="name" placeholder="Product Name"><br>
-    <textarea id="description" placeholder="Description"></textarea><br>
-    <input type="number" id="price" placeholder="Price"><br>
-    <input type="number" id="quantity" placeholder="Quantity"><br>
-    
-    <input type="text" id="image_url" placeholder="Image URL"><br>
+    <form id="productForm">
+        <div class="form-group">
+            <label for="merchant_id">Merchant ID</label>
+            <input type="number" id="merchant_id" required>
+        </div>
 
-    <button type="button" onclick="addProduct()">Add</button>
-    <button type="button" onclick="updateProduct()">Update</button>
-    <button type="button" onclick="deleteProduct()">Delete</button>
-    <button type="button" onclick="listProducts()">List</button>
-</form>
+        <div class="form-group">
+            <label for="product_id">Product ID (for Update/Delete)</label>
+            <input type="number" id="product_id">
+        </div>
 
-<h3>Products List</h3>
-<table id="productTable">
-    <thead>
-        <tr>
-            <th>ID</th><th>Name</th><th>Price</th><th>Qty</th><th>Category</th><th>Image</th>
-        </tr>
-    </thead>
-    <tbody></tbody>
-</table>
+        <div class="form-group">
+            <label for="name">Product Name</label>
+            <input type="text" id="name">
+        </div>
+
+        <div class="form-group">
+            <label for="price">Price</label>
+            <input type="number" id="price">
+        </div>
+
+        <div class="form-group">
+            <label for="quantity">Quantity</label>
+            <input type="number" id="quantity">
+        </div>
+
+        <div class="form-group">
+            <label for="image_url">Image URL</label>
+            <input type="text" id="image_url">
+        </div>
+
+        <div class="form-group-full">
+            <label for="description">Description</label>
+            <textarea id="description"></textarea>
+        </div>
+
+        <div class="button-group">
+            <button type="button" onclick="addProduct()">Add Product</button>
+            <button type="button" onclick="updateProduct()">Update Product</button>
+            <button type="button" onclick="deleteProduct()">Delete Product</button>
+            <button type="button" onclick="listProducts()">List Products</button>
+        </div>
+    </form>
+
+    <h3>Products List</h3>
+    <table id="productTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Price ($)</th>
+                <th>Qty</th>
+                
+                <th>Image</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
 
 <script>
-const apiUrl = 'http://127.0.0.1:5000/manage_product'; // adjust if your backend runs elsewhere
+const apiUrl = 'http://127.0.0.1:5000/manage_product'; 
 
 function getFormData() {
     return {
         merchant_id: parseInt(document.getElementById("merchant_id").value),
-        product_id: parseInt(document.getElementById("product_id").value),
+        product_id: parseInt(document.getElementById("product_id").value) || null,
         name: document.getElementById("name").value,
         description: document.getElementById("description").value,
-        price: parseFloat(document.getElementById("price").value),
-        quantity: parseInt(document.getElementById("quantity").value),
-        
+        price: parseFloat(document.getElementById("price").value) || 0,
+        quantity: parseInt(document.getElementById("quantity").value) || 0,
         image_url: document.getElementById("image_url").value
     };
 }
@@ -63,6 +181,7 @@ async function addProduct() {
     const res = await fetch(apiUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
     const result = await res.json();
     alert(result.status);
+    listProducts();
 }
 
 async function updateProduct() {
@@ -71,6 +190,7 @@ async function updateProduct() {
     const res = await fetch(apiUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
     const result = await res.json();
     alert(result.status);
+    listProducts();
 }
 
 async function deleteProduct() {
@@ -79,6 +199,7 @@ async function deleteProduct() {
     const res = await fetch(apiUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
     const result = await res.json();
     alert(result.status);
+    listProducts();
 }
 
 async function listProducts() {
@@ -93,10 +214,10 @@ async function listProducts() {
         const row = `<tr>
             <td>${p.id}</td>
             <td>${p.name}</td>
-            <td>${p.price}</td>
+            <td>$${p.price.toFixed(2)}</td>
             <td>${p.quantity}</td>
-            <td>${p.category}</td>
-            <td><img src="${p.image_url}" width="50"></td>
+            
+            <td><img src="${p.image_url}" width="60" height="60"></td>
         </tr>`;
         tbody.innerHTML += row;
     });
